@@ -1,0 +1,12 @@
+{
+  "name": "ini-strict",
+  "version": "0.1.0",
+  "description": "Validating INI parser and pretty printer with precise line/column error messages",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "license": "MIT",
+  "author": "mark-t260"
+}
