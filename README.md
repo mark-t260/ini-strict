@@ -100,6 +100,13 @@ not retain them. It quotes a value only when leaving it bare would change
 its meaning (leading/trailing whitespace, an empty string, or a character
 that would otherwise be parsed as a comment or quote marker).
 
+## Testing
+
+`src/ini.test.ts` is a plain assertion script, not a framework test suite -
+there are no dependencies to run it through. `npm test` compiles and then
+runs it with `node`; it exits non-zero and lists which cases failed if
+anything regresses, and prints nothing on success.
+
 ## Roadmap
 
 - Preserve comments and blank-line layout for true round-trip formatting
