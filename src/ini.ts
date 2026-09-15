@@ -23,7 +23,7 @@ export interface IniDocument {
  * Grammar, roughly:
  *   line       := section | entry | comment | blank
  *   section    := "[" name "]"
- *   entry      := key "=" value
+ *   entry      := key ("=" | ":") value
  *   value      := bareword | quoted-string
  *   comment    := (";" | "#") anything, either alone on a line or preceded
  *                 by whitespace after real content
@@ -75,12 +75,12 @@ export function parseIni(source: string): IniDocument {
       continue
     }
 
-    const eqIndex = content.indexOf("=")
-    if (eqIndex === -1) {
-      throw new IniParseError("expected '=' to separate key and value", lineNumber, content.length + 1, rawLine)
+    const sepIndex = findSeparator(content)
+    if (sepIndex === -1) {
+      throw new IniParseError("expected '=' or ':' to separate key and value", lineNumber, content.length + 1, rawLine)
     }
 
-    const rawKey = content.slice(0, eqIndex)
+    const rawKey = content.slice(0, sepIndex)
     const key = rawKey.trim()
     if (key === "") {
       throw new IniParseError("key cannot be empty", lineNumber, leading + 1, rawLine)
@@ -92,8 +92,8 @@ export function parseIni(source: string): IniDocument {
       throw new IniParseError(`duplicate key '${key}' ${where}`, lineNumber, keyColumn, rawLine)
     }
 
-    const rawValue = content.slice(eqIndex + 1)
-    const value = parseValue(rawValue, lineNumber, eqIndex + 2, rawLine)
+    const rawValue = content.slice(sepIndex + 1)
+    const value = parseValue(rawValue, lineNumber, sepIndex + 2, rawLine)
 
     currentKeys.add(key)
     currentEntries.push({ key, value })
@@ -129,6 +129,20 @@ function stripComment(line: string): string {
     }
   }
   return line
+}
+
+/**
+ * Finds the key/value separator, "=" or ":", whichever comes first. A key
+ * that itself contains a colon (a URL, say) will misparse under this rule,
+ * but that ambiguity is inherent to supporting ":" as a separator at all -
+ * every INI dialect that allows it has the same tradeoff.
+ */
+function findSeparator(content: string): number {
+  const eq = content.indexOf("=")
+  const colon = content.indexOf(":")
+  if (eq === -1) return colon
+  if (colon === -1) return eq
+  return Math.min(eq, colon)
 }
 
 function parseValue(rawValue: string, lineNumber: number, baseColumn: number, rawLine: string): string {

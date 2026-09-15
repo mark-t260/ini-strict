@@ -78,7 +78,12 @@ issue, `IniParseError` would point straight at line 3 instead.)
 
 ### Validation rules enforced today
 
-- Every `key = value` line needs an `=`; a bare key or bare value is rejected.
+- Every entry line needs a `=` or `:` separating key from value; a bare key
+  or bare value is rejected. Whichever character appears first on the line
+  is the separator, so `port: 5432` and `port = 5432` both work, but a key
+  that itself contains the other separator character (an unquoted URL used
+  as a key, say) will misparse - that ambiguity is inherent to supporting
+  both separators and applies to every INI dialect that does.
 - Section headers need a matching `]` and a non-empty name.
 - No duplicate section names.
 - No duplicate keys within the same section (or within the top-level scope
@@ -110,7 +115,6 @@ anything regresses, and prints nothing on success.
 ## Roadmap
 
 - Preserve comments and blank-line layout for true round-trip formatting
-- Support `:` as an alternate key/value separator
 - Optional type coercion helpers (`getBoolean`, `getNumber`) over string values
 - Multi-line values via line continuation
 - A CLI (`ini-strict check file.ini`) for use in CI

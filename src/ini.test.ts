@@ -102,12 +102,29 @@ test("comments are stripped except inside quotes or mid-word", () => {
   )
 })
 
-test("rejects a line with no '='", () => {
+test("rejects a line with no separator", () => {
   assertThrows(
     () => parseIni("justakey"),
-    (err) => assertIniError(err, 1, 9, "expected '=' to separate key and value"),
-    "missing '='",
+    (err) => assertIniError(err, 1, 9, "expected '=' or ':' to separate key and value"),
+    "missing separator",
   )
+})
+
+test("accepts ':' as an alternate key/value separator", () => {
+  const doc = parseIni("host: localhost\n[db]\nport: 5432")
+  assertEqual<IniDocument>(
+    doc,
+    {
+      globals: [{ key: "host", value: "localhost" }],
+      sections: [{ name: "db", entries: [{ key: "port", value: "5432" }] }],
+    },
+    "parsed document",
+  )
+})
+
+test("uses whichever of '=' or ':' comes first as the separator", () => {
+  const doc = parseIni("url = http://example.com")
+  assertEqual<IniDocument>(doc, { globals: [{ key: "url", value: "http://example.com" }], sections: [] }, "parsed document")
 })
 
 test("rejects an empty key", () => {
