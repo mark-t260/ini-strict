@@ -42,6 +42,21 @@ const doc = parseIni(source)
 console.log(printIni(doc))
 ```
 
+Values from `parseIni` are always strings. `getBoolean` and `getNumber` coerce
+them, with an optional fallback for a missing key:
+
+```ts
+import { getBoolean, getNumber } from "./src/index"
+
+const debug = getBoolean(doc.globals, "debug", false)
+const port = getNumber(doc.sections[0]!.entries, "port")
+```
+
+A missing key returns the fallback (or `undefined` with no fallback given).
+A key that's present but doesn't parse as the requested type throws, since
+that's a different problem than the key being absent. `getBoolean` accepts
+`true`/`false`, `yes`/`no`, `on`/`off`, and `1`/`0`, case-insensitively.
+
 ### Error messages
 
 Given a malformed file:
@@ -107,15 +122,14 @@ that would otherwise be parsed as a comment or quote marker).
 
 ## Testing
 
-`src/ini.test.ts` is a plain assertion script, not a framework test suite -
-there are no dependencies to run it through. `npm test` compiles and then
-runs it with `node`; it exits non-zero and lists which cases failed if
-anything regresses, and prints nothing on success.
+`src/ini.test.ts` and `src/coerce.test.ts` are plain assertion scripts, not a
+framework test suite - there are no dependencies to run them through. `npm
+test` compiles and then runs both with `node`; it exits non-zero and lists
+which cases failed if anything regresses, and prints nothing on success.
 
 ## Roadmap
 
 - Preserve comments and blank-line layout for true round-trip formatting
-- Optional type coercion helpers (`getBoolean`, `getNumber`) over string values
 - Multi-line values via line continuation
 - A CLI (`ini-strict check file.ini`) for use in CI
 
